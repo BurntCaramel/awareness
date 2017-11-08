@@ -60,6 +60,27 @@ function processIterator(changeState, iterator, storeError, previousValue) {
   })
 }
 
+export function callHandler(handler, errorKey, args, alterState) {
+  const storeError = (error) => {
+    alterState({ [errorKey]: error })
+  }
+  // Call handler function, props first, then rest of args
+  try {
+    const changeState = (stateChanger) => {
+      alterState(stateChangerCatchingError(stateChanger, errorKey))
+    }
+    const result = handler.apply(null, args);
+    // Can return multiple state changers, ensure array, and then loop through
+    [].concat(result).forEach(stateChanger => {
+      processStateChanger(changeState, stateChanger, storeError)
+    })
+  }
+  // Catch error within handler’s (first) function
+  catch (error) {
+    storeError(error)
+  }
+}
+
 // Returns a new stateful component, given the specified state handlers and a pure component to render with
 export default (
   alterState,
@@ -83,29 +104,9 @@ export default (
       callHandler(
         handlersIn.load,
         'loadError',
-        [ nextProps, prevProps ]
+        [ nextProps, prevProps ],
+        alterState
       )
-    }
-  }
-
-  function callHandler(handler, errorKey, args) {
-    const storeError = (error) => {
-      alterState({ [errorKey]: error })
-    }
-    // Call handler function, props first, then rest of args
-    try {
-      const changeState = (stateChanger) => {
-        alterState(stateChangerCatchingError(stateChanger, errorKey))
-      }
-      const result = handler.apply(null, args);
-      // Can return multiple state changers, ensure array, and then loop through
-      [].concat(result).forEach(stateChanger => {
-        processStateChanger(changeState, stateChanger, storeError)
-      })
-    }
-    // Catch error within handler’s (first) function
-    catch (error) {
-      storeError(error)
     }
   }
 
@@ -126,7 +127,8 @@ export default (
       callHandler(
         handlersIn[key],
         'handlerError',
-        [ Object.assign({}, getProps(), { handlers }) ].concat(args)
+        [ Object.assign({}, getProps(), { handlers }) ].concat(args),
+        alterState
       )
     }
     return out
@@ -135,7 +137,6 @@ export default (
   return {
     state,
     loadAsync,
-    callHandler,
     handlers
   }
 }
