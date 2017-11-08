@@ -62,7 +62,7 @@ function processIterator(changeState, iterator, storeError, previousValue) {
 
 export function callHandler(handler, errorKey, args, alterState) {
   const storeError = (error) => {
-    alterState({ [errorKey]: error })
+    alterState(() => ({ [errorKey]: error }))
   }
   // Call handler function, props first, then rest of args
   try {
