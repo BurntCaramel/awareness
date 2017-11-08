@@ -1,7 +1,7 @@
 {
   "name": "awareness",
   "version": "1.0.0",
-  "description": "Describe awareness here",
+  "description": "Smart state handlers",
   "main": "lib/index.js",
   "module": "es/index.js",
   "files": [
@@ -14,7 +14,8 @@
     "clean": "nwb clean-module",
     "test": "nwb test",
     "test:coverage": "nwb test --coverage",
-    "test:watch": "nwb test --server"
+    "test:watch": "nwb test --server",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
   },
