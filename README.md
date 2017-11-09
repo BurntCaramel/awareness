@@ -62,7 +62,7 @@ const changeCarrotsInFuture = () => {
 ### Generator function yielding new state
 
 ```js
-// Will update state on each frame
+// Will update state on each frame: 0, 1, 2, 3, 4, 5
 function * animateCarrotsZeroToFive() {
   yield { carrots: 0 }
   yield { carrots: 1 }
@@ -76,7 +76,7 @@ function * animateCarrotsZeroToFive() {
 ### Generator function yielding function that transforms old state to new state
 
 ```js
-// Will update state on each frame
+// Will update state for 10 frames: carrots+1, carrots+2, … carrots+9, carrots+10
 function * animateCarrotsByTen() {
   let total = 10
   while (total > 0) {
