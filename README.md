@@ -86,6 +86,17 @@ function * animateCarrotsByTen() {
 }
 ```
 
+### Generator function yielding Promise resolving to new state
+
+```js
+// Will use result of fetching `url` and store it in state
+function * loadURL(url) {
+  yield { loading: true }
+  yield fetch(url).then(res => res.json())
+  yield { loading: false }
+}
+```
+
 
 [build-badge]: https://img.shields.io/travis/user/repo/master.png?style=flat-square
 [build]: https://travis-ci.org/user/repo
