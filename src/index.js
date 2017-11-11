@@ -86,7 +86,7 @@ export default (
   alterState,
   handlersIn,
   {
-    getProps,
+    getProps = () => ({}),
     adjustArgs
   } = {}
 ) => {
