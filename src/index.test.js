@@ -24,6 +24,15 @@ const handlers = {
     yield { number: 3 }
     yield { number: 4 }
   },
+  double: () => ({ number }) => ({ number: number * 2 }),
+  asyncDouble: async () => {
+    await waitMs(delay)
+    return ({ number }) => ({ number: number * 2 })
+  },
+  yieldDouble: function * () {
+    yield ({ number }) => ({ number: number * 2 })
+    yield ({ number }) => ({ number: number * 2 })
+  },
   doError1: () => { throw error1 },
   doError2Async: async () => {
     await waitMs(delay)
@@ -89,9 +98,34 @@ describe('with default options', () => {
       }
     ])
 
+    actions.double()
+    expect(latest()).toEqual({
+      number: 8,
+      handlerError: null,
+      loadError: null
+    })
+
+    actions.asyncDouble()
+    await waitMs(delay)
+    expect(latest()).toEqual({
+      number: 16,
+      handlerError: null,
+      loadError: null
+    })
+
+    actions.yieldDouble()
+    await nextFrame()
+    await nextFrame()
+    await nextFrame()
+    expect(latest()).toEqual({
+      number: 64,
+      handlerError: null,
+      loadError: null
+    })
+
     actions.doError1()
     expect(latest()).toEqual({
-      number: 4,
+      number: 64,
       handlerError: error1,
       loadError: null
     })
@@ -99,7 +133,7 @@ describe('with default options', () => {
     actions.doError2Async()
     await waitMs(delay)
     expect(latest()).toEqual({
-      number: 4,
+      number: 64,
       handlerError: error2,
       loadError: null
     })
