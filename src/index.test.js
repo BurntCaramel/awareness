@@ -37,19 +37,24 @@ const handlers = {
   doError2Async: async () => {
     await waitMs(delay)
     throw error2
+  },
+  load: async (next, prev) => {
+    if (!prev || next.loadWait != prev.loadWait) {
+      await waitMs(next.loadWait)
+      return ({ loadCount = 0 }) => ({ waited: next.loadWait, loadCount: loadCount + 1 })
+    }
+
+    return { waited: 0 }
   }
 }
 
 describe('with default options', () => {
   let history = null
   let latest = () => history[history.length - 1]
+  let awareness = null
 
   beforeEach(() => {
-    history = []
-  })
-
-  it('handles actions', async () => {
-    const { state: initialState, handlers: actions, loadAsync } = makeAwareness(
+    awareness = makeAwareness(
       (stateChanger) => {
         let previous = latest()
         let updated = Object.assign({}, previous, stateChanger(previous))
@@ -57,9 +62,15 @@ describe('with default options', () => {
       },
       handlers
     )
+    history = [
+      awareness.state
+    ]
+  })
 
-    history.push(initialState)
-    expect(initialState).toEqual({
+  it('handles actions', async () => {
+    const { handlers: actions } = awareness
+
+    expect(latest()).toEqual({
       number: 0,
       handlerError: null,
       loadError: null
@@ -135,6 +146,60 @@ describe('with default options', () => {
     expect(latest()).toEqual({
       number: 64,
       handlerError: error2,
+      loadError: null
+    })
+  })
+
+  it('load', async () => {
+    const { handlers: actions, loadAsync } = awareness
+
+    expect(latest()).toEqual({
+      number: 0,
+      handlerError: null,
+      loadError: null
+    })
+
+    // Initial load
+    loadAsync({ loadWait: 100 })
+    await waitMs(100)
+    expect(latest()).toEqual({
+      number: 0,
+      waited: 100,
+      loadCount: 1,
+      handlerError: null,
+      loadError: null
+    })
+
+    // With same data
+    loadAsync({ loadWait: 100 }, { loadWait: 100 })
+    await waitMs(100)
+    expect(latest()).toEqual({
+      number: 0,
+      waited: 0,
+      loadCount: 1,
+      handlerError: null,
+      loadError: null
+    })
+
+    // With new data
+    loadAsync({ loadWait: 50 }, { loadWait: 100 })
+    await waitMs(50)
+    expect(latest()).toEqual({
+      number: 0,
+      waited: 50,
+      loadCount: 2,
+      handlerError: null,
+      loadError: null
+    })
+
+    // Reload
+    loadAsync({ loadWait: 50 }, null)
+    await waitMs(50)
+    expect(latest()).toEqual({
+      number: 0,
+      waited: 50,
+      loadCount: 3,
+      handlerError: null,
       loadError: null
     })
   })
