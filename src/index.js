@@ -13,7 +13,7 @@ function stateChangerCatchingError(stateChanger, transformError) {
       // State changer may throw
       catch (error) {
         // Store error in state
-        return { [transformError]: error }
+        return transformError(error)
       }
     }
     // Else just an object with changes
