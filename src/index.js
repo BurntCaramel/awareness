@@ -86,13 +86,19 @@ export function callHandler(handler, transformError, args, alterState) {
   }
 }
 
+const defaultTransformErrorForKey = (key) => (error) => {
+  const stateKey = `${key === 'load' ? 'load' : 'handler'}Error`
+  return { [stateKey]: error }
+}
+
 // Returns a new stateful component, given the specified state handlers and a pure component to render with
 export default (
   alterState,
   handlersIn,
   {
     getProps = () => ({}),
-    adjustArgs
+    transformErrorForKey = defaultTransformErrorForKey,
+    adjustArgs,
   } = {}
 ) => {
   const state = Object.assign(
@@ -108,7 +114,7 @@ export default (
     if (handlersIn.load) {
       callHandler(
         handlersIn.load,
-        'loadError',
+        transformErrorForKey('load'),
         [ nextProps, prevProps ],
         alterState
       )
@@ -131,7 +137,7 @@ export default (
 
       callHandler(
         handlersIn[key],
-        'handlerError',
+        transformErrorForKey(key),
         [ Object.assign({}, getProps(), { handlers }) ].concat(args),
         alterState
       )
