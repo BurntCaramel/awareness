@@ -2,7 +2,7 @@ const nextFrame = () => new Promise((resolve) => {
   window.requestAnimationFrame(resolve)
 })
 
-function stateChangerCatchingError(stateChanger, errorKey) {
+function stateChangerCatchingError(stateChanger, transformError) {
   return (prevState, props) => {
     // Check if stateChanger is a function
     if (typeof(stateChanger) === typeof(stateChanger.call)) {
@@ -13,7 +13,7 @@ function stateChangerCatchingError(stateChanger, errorKey) {
       // State changer may throw
       catch (error) {
         // Store error in state
-        return { [errorKey]: error }
+        return { [transformError]: error }
       }
     }
     // Else just an object with changes
@@ -60,14 +60,19 @@ function processIterator(changeState, iterator, storeError, previousValue) {
   })
 }
 
-export function callHandler(handler, errorKey, args, alterState) {
+export function callHandler(handler, transformError, args, alterState) {
+  if (typeof transformError === typeof '') {
+    const errorKey = transformError
+    transformError = (error) => ({ [errorKey]: error })
+  }
+
   const storeError = (error) => {
-    alterState(() => ({ [errorKey]: error }))
+    alterState(() => transformError(error))
   }
   // Call handler function, props first, then rest of args
   try {
     const changeState = (stateChanger) => {
-      alterState(stateChangerCatchingError(stateChanger, errorKey))
+      alterState(stateChangerCatchingError(stateChanger, transformError))
     }
     const result = handler.apply(null, args);
     // Can return multiple state changers, ensure array, and then loop through
