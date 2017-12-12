@@ -110,12 +110,12 @@ export default (
   )
 
   // Uses `load` handler, if present, to asynchronously load initial state
-  function loadAsync(nextProps, prevProps) {
+  function loadAsync(...args) {
     if (handlersIn.load) {
       callHandler(
         handlersIn.load,
         transformErrorForKey('load'),
-        [ nextProps, prevProps ],
+        args,
         alterState
       )
     }
